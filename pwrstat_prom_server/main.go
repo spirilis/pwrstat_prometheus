@@ -9,11 +9,14 @@ import (
 	"os/exec"
 )
 
+// Upon HTTP request, execute "pwrstat -version; pwrstat -status" and process the output through "gawk -f pwrstat-prometheus.awk", returning
+// the output in the body of the HTTP response.
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling a request-")
 	pwrstatData := bytes.NewBufferString("")
 	prometheusData := bytes.NewBufferString("")
 
+	// run pwrstat -version and capture output
 	pwrstatVersionCmd := exec.Command("/usr/sbin/pwrstat", "-version")
 	stdout, err := pwrstatVersionCmd.StdoutPipe()
 	if err != nil {
@@ -27,7 +30,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	d, err := io.ReadAll(stdout)
+	d, err := io.ReadAll(stdout) // capture output
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println(err)
@@ -39,8 +42,9 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pwrstatData.Write(d)
+	pwrstatData.Write(d) // store output in a local buffer
 
+	// run pwrstat -status and capture output
 	pwrstatStatusCmd := exec.Command("/usr/sbin/pwrstat", "-status")
 	stdout, err = pwrstatStatusCmd.StdoutPipe()
 	if err != nil {
@@ -54,7 +58,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	d, err = io.ReadAll(stdout)
+	d, err = io.ReadAll(stdout) // capture output
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println(err)
@@ -66,7 +70,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pwrstatData.Write(d)
+	pwrstatData.Write(d) // store output
 
 	// pwrstatData now contains output of pwrstat -version and pwrstat -status, pipe it to the awk script
 	// & scavenge the data to stream to the HTTP client
@@ -91,7 +95,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = pwrstatData.WriteTo(stdin)
+	_, err = pwrstatData.WriteTo(stdin) // pipe output of pwrstat cmds into the gawk script
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println(err)
@@ -99,13 +103,13 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	stdin.Close()
 
-	d, err = io.ReadAll(stdout)
+	d, err = io.ReadAll(stdout) // and capture the output of the gawk script
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
-	prometheusData.Write(d)
+	prometheusData.Write(d) // store in a temporary buffer
 
 	if err = gawk.Wait(); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -122,6 +126,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(prometheusData.Bytes())
 }
 
+// Return 200 for readinessProbe purposes
 func confirmReady(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
@@ -129,6 +134,7 @@ func confirmReady(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/metrics", metricsHandler)
 	http.HandleFunc("/", confirmReady)
+	http.HandleFunc("/healthz", confirmReady)
 
 	log.Println("Serving on port 9190-")
 	log.Fatal(http.ListenAndServe(":9190", nil))
