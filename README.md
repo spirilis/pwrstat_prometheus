@@ -13,6 +13,14 @@ There is now a Golang HTTP server that executes the right commands to run pwrsta
 
 I cannot publish the Docker image in the public because it requires a binary copy of the PowerPanel software from CyberPower, which it pulls during the docker build process.  The EULA prohibits publishing the binary.
 
+I typically build it like such:  
+```
+docker build -t myLocalRegistry/pwrstat_prom_server:0.1 -f container/Dockerfile .
+docker push myLocalRegistry/pwrstat_prom_server:0.1
+```
+
+Be sure to configure the image.repository and image.tag in the Helm chart to reference the correct Docker registry location of your image.  Hosting a Docker registry is outside the scope of this document.
+
 It's a good idea to label your nodes so specific nodes that have a CyberPower UPS, and the PowerPanel software (pwrstatd) running, are the only ones where this software will run.  
 E.g.: `kubectl label node server1 pwrstat="true"`
 
