@@ -41,3 +41,10 @@ helm -n monitoring-system upgrade -i ups helm/pwrstat-prom -f ups-values.yaml
 The helm chart deploys this as a DaemonSet so it has a chance to run on every node in your cluster, in case 1 or more of them happen to have their own CyberPower UPS providing their power.
 
 Only 1 CyberPower UPS per server is supported at the moment; I have not tried this with a 2nd unit attached to the same server, I might try this sometime.
+
+Under the hood, the Helm chart creates a [PodMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.PodMonitor)
+object which informs a kube-prometheus-stack install to scrape Prometheus metrics from the pod's port 9190 /metrics URI
+every 1 minute (configurable via prometheus.interval, which is a string of the format specified
+[here](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.Duration) )
+
+No Service is created for this pod so it's not discoverable by cluster workloads.
