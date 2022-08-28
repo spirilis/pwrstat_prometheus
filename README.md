@@ -50,9 +50,9 @@ object which informs a kube-prometheus-stack install to scrape Prometheus metric
 every 1 minute (configurable via prometheus.interval, which is a string of the format specified
 [here](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.Duration) )
 
+No Service is created for this pod so it's not discoverable by cluster workloads.
+
 The Pod running the HTTP server, which depends on the `pwrstat` utility, needs to have a UNIX domain socket to the underlying
 server's `pwrstatd` process in `/var/pwrstatd.ipc` which we mount using a hostPath inside the pod.  The path to the local
 server's directory containing pwrstatd's UNIX domain socket is configured in the pwrstat.pwrstatdIpcPath variable (it is
-*/var* by default).  The filename is expected to be *pwrstatd.ipc* inside that folder.
-
-No Service is created for this pod so it's not discoverable by cluster workloads.
+*/var* by default).  The filename is expected to be *pwrstatd.ipc* inside that directory.
