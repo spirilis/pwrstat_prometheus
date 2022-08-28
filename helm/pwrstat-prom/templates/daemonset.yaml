@@ -43,9 +43,6 @@ spec:
           {{- toYaml .Values.resources | nindent 10 }}
         volumeMounts:
         - name: ipc-path
-          mountPath: /var/pwrstatd.dev
-          subPath: "pwrstatd.dev"
-        - name: ipc-path
           mountPath: /var/pwrstatd.ipc
           subPath: "pwrstatd.ipc"
       volumes:
