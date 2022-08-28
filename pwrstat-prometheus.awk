@@ -72,10 +72,12 @@ END {
   printf "%s_rated_voltamps %f\n", prometheus_prefix, rated_va
 
   print_prometheus_help("state")
-  printf "%s_state{state=\"%s\"} 1\n", prometheus_prefix, state
+  if (state == "Normal") { state_val = 1 } else { state_val = 2 }
+  printf "%s_state{state=\"%s\"} %f\n", prometheus_prefix, state, state_val
 
   print_prometheus_help("supply_source")
-  printf "%s_supply_source{source=\"%s\"} 1\n", prometheus_prefix, supply
+  if (supply == "Utility Power") { supply_val = 1 } else { supply_val = 2 }
+  printf "%s_supply_source{source=\"%s\"} %f\n", prometheus_prefix, supply, supply_val
 
   print_prometheus_help("utility_voltage")
   printf "%s_utility_voltage %f\n", prometheus_prefix, voltage
@@ -93,7 +95,8 @@ END {
   printf "%s_load %f\n", prometheus_prefix, load_watts
 
   print_prometheus_help("line_interaction")
-  printf "%s_line_interaction{line_interaction=\"%s\"} 1\n", prometheus_prefix, line_interaction
+  if (line_interaction == "None") { line_interaction_val = 1 } else { line_interaction_val = 2 }
+  printf "%s_line_interaction{line_interaction=\"%s\"} %f\n", prometheus_prefix, line_interaction, line_interaction_val
 
   print_prometheus_help("last_power_event")
   printf "%s_last_power_event{last_event=\"%s\"} 1\n", prometheus_prefix, last_pwr_event
