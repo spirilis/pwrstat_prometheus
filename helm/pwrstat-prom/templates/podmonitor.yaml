@@ -1,0 +1,17 @@
+{{- if .Values.prometheus.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "pwrstat-prom.fullname" . }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "pwrstat-prom.selectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  podMetricsEndpoints:
+  - path: /metrics
+    port: prometheus
+    interval: {{ .Values.prometheus.interval }}
+{{- end }}

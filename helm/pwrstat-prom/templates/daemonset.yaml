@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "pwrstat-prom.fullname" . }}
+  labels:
+    {{- include "pwrstat-prom.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "pwrstat-prom.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "pwrstat-prom.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "pwrstat-prom.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: pwrstat
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["/usr/local/bin/pwrstat_prom_server"]
+        ports:
+        - name: prometheus
+          containerPort: 9190
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: prometheus
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        volumeMounts:
+        - name: ipc-path
+          mountPath: /var/pwrstatd.dev
+          subPath: "pwrstatd.dev"
+        - name: ipc-path
+          mountPath: /var/pwrstatd.ipc
+          subPath: "pwrstatd.ipc"
+      volumes:
+      - name: ipc-path
+        hostPath:
+          path: "{{ .Values.pwrstat.pwrstatdIpcPath }}"
+          type: Directory
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
