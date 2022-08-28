@@ -1,5 +1,8 @@
 # pwrstat_prometheus
-Prometheus adapter for CyberPower UPS PowerPanel utility for Linux
+Prometheus adapter for CyberPower UPS [PowerPanel utility for Linux](https://www.cyberpowersystems.com/product/software/power-panel-personal/powerpanel-for-linux/)
+
+This project depends on PowerPanel's pwrstatd running on the Linux server (launched via systemd or similar) and a working
+connection to the UPS (typically via USB cable).  The `pwrstat -status` command should work correctly on the server.
 
 Typically run on a Linux machine like such:  
 
