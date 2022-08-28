@@ -37,7 +37,7 @@ spec:
           protocol: TCP
         readinessProbe:
           httpGet:
-            path: /
+            path: /healthz
             port: prometheus
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
